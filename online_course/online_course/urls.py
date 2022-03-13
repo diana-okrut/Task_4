@@ -35,6 +35,10 @@ from course.views import (
     StudentCommentView,
 )
 
+from online_course.tasks import print_hi
+from django.http import HttpResponse
+
+
 schema_view = get_schema_view(
     openapi.Info(
         title="Snippets API",
@@ -61,23 +65,29 @@ router.register("teacher-comments", TeacherCommentView, basename="teacher_commen
 router.register("student-comments", StudentCommentView, basename="student_comments")
 
 
+def test_celery(request):
+    print_hi.delay()
+    return HttpResponse('Ok')
+
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api-auth/", include("rest_framework.urls")),
     path("api/token/", TokenObtainPairView.as_view()),
     path("api/token/refresh/", TokenRefreshView.as_view()),
-    path(
-        r"^swagger(?P<format>\.json|\.yaml)$",
-        schema_view.without_ui(cache_timeout=0),
-        name="schema-json",
-    ),
-    path(
-        r"^swagger/$",
-        schema_view.with_ui("swagger", cache_timeout=0),
-        name="schema-swagger-ui",
-    ),
-    path(
-        r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"
-    ),
+    path("test/", test_celery),
+    # path(
+    #     r"^swagger(?P<format>\.json|\.yaml)$",
+    #     schema_view.without_ui(cache_timeout=0),
+    #     name="schema-json",
+    # ),
+    # path(
+    #     r"^swagger/$",
+    #     schema_view.with_ui("swagger", cache_timeout=0),
+    #     name="schema-swagger-ui",
+    # ),
+    # path(
+    #     r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"
+    # ),
 ]
 urlpatterns += router.urls
