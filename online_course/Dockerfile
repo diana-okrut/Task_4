@@ -7,7 +7,6 @@ RUN groupadd -r ${APP_USER} && useradd --no-log-init --create-home -r -u 1000 -g
 
 WORKDIR /online_course
 COPY . .
-RUN chmod +x ./run.bash
 RUN pip install -r  requirements.txt
 
 #ENTRYPOINT []
