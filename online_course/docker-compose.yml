@@ -13,11 +13,18 @@ services:
     command: ["celery", "-A", "online_course", "worker"]
     env_file: ./.env
     depends_on:
-      redis:
-        condition: service_started
-      db:
-        condition: service_healthy
-
+      - redis
+      - db
+  beat:
+    entrypoint: ['celery']
+    command: ['-A', 'online_course', 'beat']
+    env_file: ./.env
+    build: .
+    volumes:
+      - .:/online_course
+    depends_on:
+      - redis
+      - db
   flower:
     restart: always
     build: .
@@ -32,39 +39,35 @@ services:
         condition: service_started
       worker:
         condition: service_started
-
   web:
     restart: always
     build: .
-    command: ["./run.bash"]
     volumes:
       - .:/online_course
     ports:
-      - "1337:8000"
+      - "8000:8000"
     env_file: ./.env
     depends_on:
-      db:
-        condition: service_healthy
-      worker:
-        condition: service_started
+      - redis
+      - db
+    entrypoint: [ ]
+    command: /bin/bash -c "
+      ./wait_for.sh $${POSTGRES_HOST}:$${POSTGRES_PORT} &&
+      python manage.py migrate &&
+      python collectstatic --no-input &&
+      python manage.py runserver 0.0.0.0:8000"
   db:
     restart: always
     image: postgres
+    env_file: ./.env
     ports:
-      - '5432'
+      - '5902:5432'
     volumes:
       - postgresqldbvolume:/var/lib/postgresql/data
-    env_file: ./.env
     environment:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
 volumes:
   postgresqldbvolume:
     driver: local
