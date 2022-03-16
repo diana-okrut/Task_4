@@ -3,14 +3,14 @@ version: "2.2"
 services:
   redis:
     image: redis
-    restart: always
     env_file: ./.env
   worker:
     restart: always
     build: .
     volumes:
       - .:/online_course
-    command: ["celery", "-A", "online_course", "worker"]
+    entrypoint: ["celery"]
+    command: ['-A', 'online_course.celery', 'worker', '-l', 'INFO']
     env_file: ./.env
     depends_on:
       - redis
@@ -30,6 +30,7 @@ services:
     build: .
     ports:
       - "5555:5555"
+    entrypoint: []
     command: [ "celery", "-A", "online_course", "flower" ]
     volumes:
       - .:/online_course
@@ -52,9 +53,9 @@ services:
       - db
     entrypoint: [ ]
     command: /bin/bash -c "
-      ./wait_for.sh $${POSTGRES_HOST}:$${POSTGRES_PORT} &&
+      ./wait_for.sh $${DB_HOST}:$${DB_PORT} &&
       python manage.py migrate &&
-      python collectstatic --no-input &&
+      python manage.py collectstatic --no-input &&
       python manage.py runserver 0.0.0.0:8000"
   db:
     restart: always
@@ -64,10 +65,6 @@ services:
       - '5902:5432'
     volumes:
       - postgresqldbvolume:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
 volumes:
   postgresqldbvolume:
     driver: local
