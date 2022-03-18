@@ -10,6 +10,8 @@ ARG APP_DIR=/home/${APP_USER}/project/
 RUN mkdir ${APP_DIR} && chown ${APP_USER}:${APP_USER} ${APP_DIR}
 WORKDIR ${APP_DIR}
 
+RUN pip install --upgrade pip
+
 COPY requirements.txt ${APP_DIR}
 RUN pip install -r  requirements.txt
 

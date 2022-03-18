@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
+import online_course.tasks
+from celery.schedules import crontab
+
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -22,12 +25,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = os.environ.get("SECRET_KEY")               #config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
-
-ALLOWED_HOSTS = []
+DEBUG = int(os.environ.get("DEBUG", default=0))         #config('DEBUG', default=True, cast=bool)
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")      #['*']
 
 
 # Application definition
@@ -81,13 +83,13 @@ WSGI_APPLICATION = "online_course.wsgi.application"
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': config('DB_ENGINE'),
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
+    "default": {
+        "ENGINE": os.environ.get("POSTGRES_ENGINE", "django.db.backends.sqlite3"),
+        "NAME": os.environ.get("POSTGRES_DATABASE", BASE_DIR / "db.sqlite3"),
+        "USER": os.environ.get("POSTGRES_USER", "user"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "password"),
+        "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
+        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
     }
 }
 
@@ -173,3 +175,10 @@ CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND")
 # CELERY_TIMEZONE = "UTC"
 # CELERY_TASK_TRACK_STARTED = True
 # CELERY_TASK_TIME_LIMIT = 30 * 60
+
+CELERY_BEAT_SCHEDULE = {
+    "sample_task": {
+        "task": "online_course.tasks.sample_task",
+        "schedule": crontab(minute="*/1"),
+    },
+}
