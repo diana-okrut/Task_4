@@ -13,10 +13,10 @@ WORKDIR ${APP_DIR}
 RUN pip install --upgrade pip
 
 COPY requirements.txt ${APP_DIR}
-RUN pip install -r  requirements.txt
+RUN pip install -r requirements.txt
 
 COPY --chown=${APP_USER}:${APP_USER} . ${APP_DIR}
 
 USER ${APP_USER}:${APP_USER}
 
-ENTRYPOINT ['/bin/bash', '-c']
+ENTRYPOINT ["gunicorn", "--bind", "0.0.0.0:8000", 'online_course.wsgi']

@@ -17,13 +17,13 @@ services:
       ./wait_for.sh $${POSTGRES_HOST}:$${POSTGRES_PORT} &&
       python manage.py migrate &&
       python manage.py collectstatic --no-input &&
-      python manage.py runserver 0.0.0.0:8000"
+      gunicorn --bind 0.0.0.0:8000 online_course.wsgi"
   db:
     restart: always
     image: postgres
     env_file: ./.env
     ports:
-      - '5902:5432'
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
@@ -61,7 +61,7 @@ services:
     ports:
       - "5555:5555"
     entrypoint: ["celery"]
-    command: ["-A", "online_course", "flower" ]
+    command: ["-A", "online_course", "flower"]
     volumes:
       - ./online_course/:/usr/src/app/
     env_file: ./.env
