@@ -14,8 +14,8 @@ from datetime import timedelta
 from pathlib import Path
 import online_course.tasks
 from celery.schedules import crontab
-
-from decouple import config
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,11 +25,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY")               #config('SECRET_KEY')
+SECRET_KEY = os.environ.get("SECRET_KEY", 'jjhgh')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = int(os.environ.get("DEBUG", default=0))         #config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")      #['*']
+DEBUG = int(os.environ.get("DEBUG", default=0))
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", '*').split(" ")
 
 
 # Application definition
@@ -44,12 +44,13 @@ INSTALLED_APPS = [
     "course.apps.CourseConfig",
     "rest_framework",
     "rest_framework_simplejwt",
-    "drf_yasg",
+    # "drf_yasg",
     "django_celery_results",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -129,7 +130,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
 STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -166,19 +168,27 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
 }
 # Celery Configuration Options
-# REDIS_HOST = '0.0.0.0'
-# REDIS_PORT = '6379'
-CELERY_BROKER_URL = config("CELERY_BROKER_URL")
-CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND")
-# CELERY_ACCEPT_CONTENT = ['json']
-# CELERY_TASK_SERIALIZER = 'json'
-# CELERY_TIMEZONE = "UTC"
-# CELERY_TASK_TRACK_STARTED = True
-# CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", 'redis://redis:6379')
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", 'django-db')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIMEZONE = "Europe/Minsk"
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+# CELERY_TASK_ROUTES = {
+#    'myproject.apps.mail.tasks.send_mail_task': {'queue': 'mail', },
+# }
 
 CELERY_BEAT_SCHEDULE = {
-    "sample_task": {
+    "print_smth_periodic_task": {
         "task": "online_course.tasks.sample_task",
         "schedule": crontab(minute="*/1"),
     },
 }
+
+sentry_sdk.init(
+    dsn="https://155b647767f244119489746f2735452a@o1174450.ingest.sentry.io/6270435",
+    integrations=[DjangoIntegration()],
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+)
