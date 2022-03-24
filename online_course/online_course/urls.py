@@ -66,7 +66,7 @@ router.register("student-comments", StudentCommentView, basename="student_commen
 
 
 def test_celery(request):
-    print_hi.delay()
+    print_hi.apply_async(countdown=10)
     return HttpResponse('Ok')
 
 
