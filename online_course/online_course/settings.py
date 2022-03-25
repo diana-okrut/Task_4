@@ -175,13 +175,13 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_TIMEZONE = "Europe/Minsk"
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
-# CELERY_TASK_ROUTES = {
-#    'myproject.apps.mail.tasks.send_mail_task': {'queue': 'mail', },
-# }
-
+CELERY_TASK_ROUTES = {
+    'online_course.tasks.MyStaticTask': {'queue': 'static', 'priority': 10},
+    'online_course.tasks.MyPeriodicTask': {'queue': 'periodic', 'priority': 0},
+}
 CELERY_BEAT_SCHEDULE = {
     "print_smth_periodic_task": {
-        "task": "online_course.tasks.sample_task",
+        "task": "online_course.tasks.MyPeriodicTask",
         "schedule": crontab(minute="*/1"),
     },
 }
