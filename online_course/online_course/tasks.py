@@ -1,16 +1,21 @@
-from online_course.celery import app
-from celery import shared_task
+from .celery import app
 from celery.utils.log import get_task_logger
+from celery import Task
 
 
-logger = get_task_logger(__name__)
+class MyStaticTask(Task):
+    name = 'MyStaticTask'
+
+    def run(self, *args, **kwargs):
+        print("Слава Україні! Жыве Беларусь!")
 
 
-@shared_task
-def sample_task():
-    logger.info("The sample task just ran.")
+class MyPeriodicTask(Task):
 
-@app.task
-def print_hi():
-    print("Слава Україні! Жыве Беларусь!")
-    return 3
+    def run(self, *args, **kwargs):
+        logger = get_task_logger(__name__)
+        logger.info("The sample task just ran.")
+
+
+app.register_task(MyStaticTask)
+app.register_task(MyPeriodicTask)
