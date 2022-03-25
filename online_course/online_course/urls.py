@@ -35,7 +35,7 @@ from course.views import (
     StudentCommentView,
 )
 
-from online_course.tasks import print_hi
+from online_course.tasks import MyStaticTask
 from django.http import HttpResponse
 
 
@@ -66,7 +66,8 @@ router.register("student-comments", StudentCommentView, basename="student_commen
 
 
 def test_celery(request):
-    print_hi.apply_async(countdown=10)
+    a = MyStaticTask()
+    a.apply_async(queue="static", countdown=10)
     return HttpResponse('Ok')
 
 
