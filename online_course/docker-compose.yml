@@ -39,8 +39,8 @@ services:
     build: .
     volumes:
       - ./online_course/:/usr/src/app/
-    entrypoint: ["celery"]
-    command: ['-A', 'online_course.celery', 'worker', '-Q', 'static', '-l', 'INFO']
+    entrypoint: [ ]
+    command: ['celery', '-A', 'online_course.celery', 'worker', '-Q', 'static', '-l', 'INFO']
     env_file: ./.env
     depends_on:
       - redis
@@ -50,15 +50,15 @@ services:
     build: .
     volumes:
       - ./online_course/:/usr/src/app/
-    entrypoint: [ "celery" ]
-    command: [ '-A', 'online_course.celery', 'worker', '-Q', 'periodic','-l', 'INFO' ]
+    entrypoint: [ ]
+    command: ['celery', '-A', 'online_course.celery', 'worker', '-Q', 'periodic','-l', 'INFO' ]
     env_file: ./.env
     depends_on:
       - redis
       - db
   beat:
-    entrypoint: ['celery']
-    command: ['-A', 'online_course', 'beat','-l', 'INFO']
+    entrypoint: [ ]
+    command: ['celery', '-A', 'online_course', 'beat','-l', 'INFO']
     env_file: ./.env
     build: .
     volumes:
@@ -71,8 +71,8 @@ services:
     build: .
     ports:
       - "5555:5555"
-    entrypoint: ["celery"]
-    command: ["-A", "online_course", "flower"]
+    entrypoint: [ ]
+    command: ["celery", "-A", "online_course", "flower"]
     volumes:
       - ./online_course/:/usr/src/app/
     env_file: ./.env
