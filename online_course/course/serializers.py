@@ -68,6 +68,7 @@ class StudentCommentSerializer(serializers.ModelSerializer):
             "updated_at",
             "student",
             "score",
+            "avatar",
         )
 
 
