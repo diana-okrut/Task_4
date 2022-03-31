@@ -46,6 +46,7 @@ class Teacher(models.Model):
 class Student(models.Model):
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="student")
     courses = models.ManyToManyField(Course, related_name="courses")
+    avatar = models.ImageField(verbose_name='photo', default=None)
 
 
 class HomeWork(models.Model):
